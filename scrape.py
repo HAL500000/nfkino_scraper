@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 BASE = "https://www.nfkino.no"
 CITY = "oslo"
 INDEX_PATHS = ["/filmer?city={city}", "/?city={city}"]
-MAX_FILMS = 60
+MAX_FILMS = 300
 WORKERS = 5
 USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
@@ -172,6 +172,9 @@ def build(log=print):
             break
     if not slugs:
         raise RuntimeError("fant ingen filmer på nfkino.no")
+    links_found = len(slugs)
+    if links_found > MAX_FILMS:
+        log("  ADVARSEL: kutter fra %d til %d filmer (MAX_FILMS)" % (links_found, MAX_FILMS))
 
     def one(slug):
         try:
@@ -206,6 +209,8 @@ def build(log=print):
     return {
         "generated": int(time.time()),
         "city": CITY,
+        "linksFound": links_found,
+        "truncated": links_found > MAX_FILMS,
         "films": [{k: f[k] for k in ("slug", "title", "minutes", "age", "poster")}
                   for f in films],
         "cinemas": cinemas,

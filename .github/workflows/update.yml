@@ -2,8 +2,8 @@ name: Oppdater kinoprogram og publiser
 
 on:
   schedule:
-    # Hver 6. time. NFkino publiserer nytt program tirsdag ettermiddag.
-    - cron: "17 */6 * * *"
+    # Tre ganger i døgnet. NFkino publiserer nytt program tirsdag ettermiddag.
+    - cron: "17 */8 * * *"
   workflow_dispatch:
   push:
     branches: [main]
@@ -36,7 +36,9 @@ jobs:
           import json, time
           d = json.load(open("program.json"))
           print("### Kinoprogram oppdatert\n")
-          print("- Filmer: **%d**" % len(d["films"]))
+          print("- Filmlenker funnet: %d%s" % (d.get("linksFound", 0),
+                "  :warning: **KUTTET**" if d.get("truncated") else ""))
+          print("- Filmer med visninger: **%d**" % len(d["films"]))
           print("- Visninger: **%d**" % len(d["screenings"]))
           print("- Kinoer: %s" % ", ".join(c["name"] for c in d["cinemas"]))
           print("- Hentet: %s UTC" % time.strftime("%Y-%m-%d %H:%M", time.gmtime(d["generated"])))
