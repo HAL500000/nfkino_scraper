@@ -1,4 +1,4 @@
-name: Oppdater kinoprogram og publiser
+name: Oppdater kinoprogram
 
 on:
   schedule:
@@ -6,19 +6,19 @@ on:
     - cron: "17 */8 * * *"
   workflow_dispatch:
   push:
-    branches: [main]
+    paths:
+      - scrape.py
+      - .github/workflows/update.yml
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: oppdater-program
   cancel-in-progress: false
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,28 +55,3 @@ jobs:
             git commit -m "Oppdater kinoprogram"
             git push
           fi
-
-      - name: Bygg nettstedet
-        run: |
-          mkdir -p _site
-          cp index.html program.json _site/
-          touch _site/.nojekyll
-
-      - name: Slå på GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
