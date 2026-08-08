@@ -1,0 +1,80 @@
+name: Oppdater kinoprogram og publiser
+
+on:
+  schedule:
+    # Hver 6. time. NFkino publiserer nytt program tirsdag ettermiddag.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Hent program fra nfkino.no
+        run: python3 scrape.py --out program.json
+
+      - name: Sammendrag
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, time
+          d = json.load(open("program.json"))
+          print("### Kinoprogram oppdatert\n")
+          print("- Filmer: **%d**" % len(d["films"]))
+          print("- Visninger: **%d**" % len(d["screenings"]))
+          print("- Kinoer: %s" % ", ".join(c["name"] for c in d["cinemas"]))
+          print("- Hentet: %s UTC" % time.strftime("%Y-%m-%d %H:%M", time.gmtime(d["generated"])))
+          PY
+
+      - name: Commit hvis endret
+        run: |
+          git config user.name "nfkino-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add program.json
+          if git diff --quiet --cached; then
+            echo "Ingen endringer i programmet."
+          else
+            git commit -m "Oppdater kinoprogram"
+            git push
+          fi
+
+      - name: Bygg nettstedet
+        run: |
+          mkdir -p _site
+          cp index.html program.json _site/
+          touch _site/.nojekyll
+
+      - name: Slå på GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

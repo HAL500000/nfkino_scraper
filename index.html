@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a4fd6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Når starter filmen egentlig? Kinoprogrammet for Nordisk Film Kino Oslo med reklametida trukket fra.">
+<title>Når starter filmen?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🎬</text></svg>">
+<style>
+  :root{
+    --bg:#0f1621;--bg2:#161f2d;--card:#1b2534;--card2:#212d3f;--line:#2b3849;
+    --blue:#1a4fd6;--blue2:#3d7bff;--text:#eef3fa;--dim:#93a2b8;--dim2:#6d7d94;
+    --go:#4ade80;--warn:#fbbf24;--radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);padding-bottom:50px;
+    font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--blue2)}
+  header{background:var(--blue);padding:calc(env(safe-area-inset-top) + 13px) 16px 13px;
+    position:sticky;top:0;z-index:30}
+  header h1{margin:0;font-size:18px;font-weight:700;text-align:center}
+  header .sub{margin:3px 0 0;font-size:12px;text-align:center;color:#c5d6ff}
+  .wrap{max-width:760px;margin:0 auto;padding:0 12px}
+  .bar{position:sticky;top:0;z-index:20;background:var(--bg);padding-top:10px}
+  .scroller{display:flex;gap:7px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+  .scroller::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--dim);
+    padding:7px 13px;border-radius:999px;font-size:13.5px;cursor:pointer;white-space:nowrap;font-weight:500}
+  .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .chip.day{display:flex;flex-direction:column;align-items:center;line-height:1.15;padding:6px 14px}
+  .chip.day b{font-size:14px;font-weight:700}
+  .chip.day span{font-size:11px;opacity:.75}
+  .row{display:flex;gap:8px;align-items:center;padding-bottom:10px}
+  input,select{background:var(--card);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:9px 12px;font-size:15px;width:100%;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--blue2)}
+  button.ghost{background:var(--card);border:1px solid var(--line);color:var(--dim);
+    border-radius:10px;padding:9px 13px;font-size:14px;cursor:pointer;white-space:nowrap;font-family:inherit}
+  button.primary{background:var(--blue);border:1px solid var(--blue);color:#fff;font-weight:600;
+    border-radius:10px;padding:10px 16px;font-size:15px;cursor:pointer;font-family:inherit}
+  .group-head{font-size:12px;letter-spacing:.9px;text-transform:uppercase;color:var(--dim2);
+    font-weight:700;margin:20px 2px 8px}
+  .card{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:11px;margin-bottom:9px}
+  .card.soon{border-color:#3a5f3f;background:linear-gradient(180deg,#1c2b23,var(--card))}
+  .poster{width:56px;height:84px;border-radius:7px;object-fit:cover;flex:0 0 auto;background:var(--card2)}
+  .meta{flex:1;min-width:0}
+  .title{font-weight:700;font-size:15.5px;margin:0 0 2px;line-height:1.25}
+  .where{font-size:12.5px;color:var(--dim);margin-bottom:8px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .startline{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .big{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1;color:var(--go)}
+  .biglabel{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim2);font-weight:700}
+  .detail{font-size:12px;color:var(--dim2);margin-top:7px}
+  .detail b{color:var(--dim);font-weight:600}
+  .strike{text-decoration:line-through;opacity:.7}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;background:var(--card2);
+    color:var(--dim);border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:2px}
+  .pill.est{background:#3a2f16;color:var(--warn)}
+  .pill.cal{background:#16332a;color:var(--go)}
+  details.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    margin:12px 0;overflow:hidden}
+  details.panel>summary{padding:12px 14px;cursor:pointer;font-size:14px;font-weight:600;
+    color:var(--dim);list-style:none}
+  details.panel>summary::-webkit-details-marker{display:none}
+  details.panel>summary::after{content:"›";float:right;transform:rotate(90deg);color:var(--dim2)}
+  details.panel[open]>summary::after{transform:rotate(-90deg)}
+  .panel-body{padding:0 14px 14px;font-size:13.5px;color:var(--dim)}
+  .panel-body p{margin:0 0 10px}
+  .kv{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+  .kv label{flex:1;font-size:13.5px;color:var(--text)}
+  .kv input{width:78px;text-align:center}
+  .kv .reset{font-size:11px;color:var(--dim2);cursor:pointer;text-decoration:underline}
+  .slider{width:100%;accent-color:var(--blue2)}
+  .status{text-align:center;color:var(--dim2);font-size:13px;padding:26px 10px}
+  .err{background:#3a1c1c;border:1px solid #5c2b2b;color:#ffc9c9;border-radius:var(--radius);
+    padding:14px;margin:14px 0;font-size:13.5px}
+  .err b{color:#fff}
+  .stale{background:#33290f;border:1px solid #5c4a1c;color:#ffe2a8;border-radius:10px;
+    padding:9px 12px;margin:10px 0 0;font-size:12.5px}
+  footer{color:var(--dim2);font-size:11.5px;text-align:center;padding:24px 16px 10px;line-height:1.6}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);
+    border-top-color:var(--blue2);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Når starter filmen egentlig?</h1>
+  <p class="sub">Nordisk Film Kino Oslo · reklamen trukket fra</p>
+</header>
+
+<div class="wrap">
+  <div class="bar">
+    <div class="scroller" id="days"></div>
+    <div class="scroller" id="cinemas"></div>
+    <div class="row">
+      <input type="search" id="q" placeholder="Søk etter film…" autocomplete="off">
+      <button class="ghost" id="refresh" title="Hent programmet på nytt">↻</button>
+    </div>
+  </div>
+
+  <div id="status" class="status"><span class="spin"></span> Laster …</div>
+  <div id="list"></div>
+
+  <details class="panel" id="settings">
+    <summary>⚙︎ Reklametid og kalibrering</summary>
+    <div class="panel-body">
+      <p>NFkino oppgir spilletiden til filmen, men ikke hvor lang reklameblokka er.
+         Vi bruker derfor et anslag som du kan justere. Innstillingene lagres i nettleseren
+         din, og ligger også i adressen så du kan dele eller bokmerke dem.</p>
+      <div class="kv">
+        <label for="defads">Standard reklametid</label>
+        <input type="number" id="defads" min="0" max="45" step="1"> <span>min</span>
+      </div>
+      <input class="slider" type="range" id="defadsr" min="0" max="40" step="1">
+
+      <p style="margin-top:16px"><b style="color:var(--text)">Kalibrer mot en billett</b><br>
+      Har du en billett med «Slutter»-tid? Velg kino og film, skriv inn annonsert starttid
+      og slutt-tiden, så regner vi ut nøyaktig reklametid for den kinoen.</p>
+      <div class="row" style="flex-wrap:wrap">
+        <select id="calCinema" style="flex:1;min-width:130px"></select>
+        <select id="calFilm" style="flex:1;min-width:130px"></select>
+      </div>
+      <div class="row">
+        <input type="time" id="calStart">
+        <input type="time" id="calEnd">
+        <button class="primary" id="calGo">Regn ut</button>
+      </div>
+      <p id="calOut"></p>
+      <div id="overrides"></div>
+    </div>
+  </details>
+
+  <details class="panel">
+    <summary>ℹ︎ Hvordan regnes dette ut?</summary>
+    <div class="panel-body">
+      <p>NFkino annonserer <b style="color:var(--text)">starttiden på visningen</b> — altså når
+      lyset dempes og reklamen begynner. Selve filmen starter et kvarters tid senere.</p>
+      <p>En jobb på GitHub henter spilletiden («Lengde») og alle Oslo-visningene fra
+      <a href="https://www.nfkino.no" target="_blank" rel="noopener">nfkino.no</a> noen ganger
+      om dagen, og siden regner:</p>
+      <p style="background:var(--bg2);padding:10px 12px;border-radius:8px;color:var(--text)">
+        filmstart = annonsert tid + reklame<br>slutt = filmstart + spilletid
+      </p>
+      <p>Kontroll mot en ekte billett: <i>Her Private Hell</i> på Klingenberg, annonsert 20:45,
+      «Slutter 22:52» = 127 min. Spilletiden er 1t 49m = 109 min. Differansen er
+      <b style="color:var(--text)">18 minutter reklame</b> — filmen begynner altså 21:03.</p>
+      <p>Stemmer ikke «slutt»-tiden vår med billetten din? Da er anslaget for den kinoen litt feil.
+      Kalibrer den, så treffer resten også.</p>
+    </div>
+  </details>
+
+  <footer id="foot">Uoffisiell side · data fra nfkino.no</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+function $(s,r){return (r||document).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
+function pad(n){return n<10?"0"+n:""+n;}
+function hhmm(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+":"+pad(m%60);}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function fmtLen(m){if(!m)return "";var h=Math.floor(m/60),r=m%60;return h?(h+"t "+r+"m"):(r+" min");}
+var DAY_NB=["Søn","Man","Tir","Ons","Tor","Fre","Lør"];
+var MON_NB=["jan","feb","mar","apr","mai","jun","jul","aug","sep","okt","nov","des"];
+function isoToday(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function isoToDate(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes();}
+
+var state={films:[],screenings:[],cinemas:[],day:null,cinemaFilter:null,query:"",
+           defaultAds:18,adsByCinema:{},loaded:false,generated:0};
+
+/* ---- lagring: localStorage om mulig, ellers bare i minnet ---- */
+var store={
+  get:function(k){try{return window.localStorage.getItem(k);}catch(e){return null;}},
+  set:function(k,v){try{window.localStorage.setItem(k,v);}catch(e){}}
+};
+
+function loadSettings(){
+  var raw=store.get("nfkino.settings");
+  if(raw){try{
+    var s=JSON.parse(raw);
+    if(typeof s.defaultAds==="number")state.defaultAds=s.defaultAds;
+    if(s.adsByCinema&&typeof s.adsByCinema==="object")state.adsByCinema=s.adsByCinema;
+  }catch(e){}}
+  // adressen vinner over lagret verdi, så delte lenker virker
+  var h=(location.hash||"").replace(/^#/,"");
+  if(h)h.split(",").forEach(function(p){
+    var a=p.match(/^ads=(\d+)$/); if(a){state.defaultAds=+a[1];return;}
+    var b=p.match(/^(\d+):(\d+)$/); if(b){state.adsByCinema[b[1]]=+b[2];}
+  });
+}
+function saveSettings(){
+  store.set("nfkino.settings",JSON.stringify(
+    {defaultAds:state.defaultAds,adsByCinema:state.adsByCinema}));
+  var parts=["ads="+state.defaultAds];
+  Object.keys(state.adsByCinema).forEach(function(id){parts.push(id+":"+state.adsByCinema[id]);});
+  try{history.replaceState(null,"","#"+parts.join(","));}catch(e){}
+}
+
+function adsFor(id){var v=state.adsByCinema[id];return (typeof v==="number")?v:state.defaultAds;}
+function calibrated(id){return typeof state.adsByCinema[id]==="number";}
+
+/* ---- data ---- */
+function load(){
+  $("#status").innerHTML='<span class="spin"></span> Laster kinoprogram …';
+  $("#list").innerHTML="";
+  fetch("program.json?t="+Date.now(),{cache:"no-store"})
+    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})
+    .then(function(d){
+      state.films=d.films||[];
+      state.screenings=d.screenings||[];
+      state.cinemas=d.cinemas||[];
+      state.generated=d.generated||0;
+
+      var today=isoToday(),days={};
+      state.screenings.forEach(function(x){if(x.date>=today)days[x.date]=1;});
+      var dayList=Object.keys(days).sort();
+      if(dayList.indexOf(state.day)<0)
+        state.day=dayList.indexOf(today)>=0?today:(dayList[0]||today);
+
+      state.loaded=true;
+      $("#status").innerHTML="";
+      renderDays(dayList); renderCinemas(); fillCal(); render();
+
+      var mins=Math.max(0,Math.round((Date.now()/1000-state.generated)/60));
+      var when=mins<60?(mins+" min"):(mins<2880?Math.round(mins/60)+" t":Math.round(mins/1440)+" dager");
+      $("#foot").innerHTML="Uoffisiell side · data fra nfkino.no · "+
+        (mins<3?"oppdatert nå nettopp":"oppdatert for "+when+" siden");
+      if(mins>26*60)
+        $("#status").innerHTML='<div class="stale">Programmet er '+when+
+          " gammelt. Oppdateringsjobben på GitHub har kanskje stoppet — "+
+          "kjør «Update programmet» manuelt under Actions.</div>";
+    })
+    .catch(function(e){
+      $("#status").innerHTML="";
+      $("#list").innerHTML='<div class="err"><b>Fikk ikke lastet programmet.</b><br>'+
+        esc(e.message)+"<br><br>Har GitHub Actions-jobben kjørt og laget <code>program.json</code>?</div>";
+    });
+}
+
+/* ---- rendering ---- */
+function renderDays(dayList){
+  var today=isoToday(),el=$("#days");
+  el.innerHTML=dayList.slice(0,8).map(function(iso){
+    var d=isoToDate(iso);
+    return '<div class="chip day'+(iso===state.day?" on":"")+'" data-day="'+iso+'"><b>'+
+      (iso===today?"I dag":DAY_NB[d.getDay()])+"</b><span>"+d.getDate()+". "+
+      MON_NB[d.getMonth()]+"</span></div>";
+  }).join("");
+  $$(".chip.day",el).forEach(function(c){c.onclick=function(){
+    state.day=c.getAttribute("data-day");
+    $$(".chip.day",el).forEach(function(x){x.classList.remove("on");});
+    c.classList.add("on"); render();};});
+}
+
+function renderCinemas(){
+  var el=$("#cinemas");
+  el.innerHTML='<div class="chip'+(state.cinemaFilter===null?" on":"")+'" data-c="">Alle kinoer</div>'+
+    state.cinemas.map(function(c){return '<div class="chip'+(state.cinemaFilter===c.id?" on":"")+
+      '" data-c="'+esc(c.id)+'">'+esc(c.name)+"</div>";}).join("");
+  $$(".chip",el).forEach(function(c){c.onclick=function(){
+    var v=c.getAttribute("data-c"); state.cinemaFilter=v===""?null:v;
+    $$(".chip",el).forEach(function(x){x.classList.remove("on");});
+    c.classList.add("on"); render();};});
+}
+
+function bucket(m){
+  if(m<12*60)return "Formiddag";
+  if(m<17*60)return "Ettermiddag";
+  if(m<20*60)return "Tidlig kveld";
+  return "Kveld";
+}
+
+function render(){
+  if(!state.loaded)return;
+  var today=isoToday(),now=nowMin(),q=state.query.toLowerCase().trim();
+  var rows=state.screenings.filter(function(s){
+    if(s.date!==state.day)return false;
+    if(state.cinemaFilter&&s.cinemaId!==state.cinemaFilter)return false;
+    if(q&&s.title.toLowerCase().indexOf(q)<0)return false;
+    if(s.date===today&&s.startMin+adsFor(s.cinemaId)+10<now)return false;
+    return true;
+  });
+  rows.sort(function(a,b){return (a.startMin-b.startMin)||a.title.localeCompare(b.title,"no");});
+
+  if(!rows.length){
+    $("#list").innerHTML='<div class="status">Ingen visninger her.<br>'+
+      (q?"Prøv et annet søk.":"Velg en annen dag eller kino.")+"</div>";
+    return;
+  }
+
+  var html="",last="";
+  rows.forEach(function(s){
+    var ads=adsFor(s.cinemaId),start=s.startMin+ads,end=s.minutes?start+s.minutes:null;
+    var head=bucket(start);
+    if(head!==last){html+='<div class="group-head">'+head+"</div>";last=head;}
+    var soon=(s.date===today&&start>=now&&start-now<=60);
+    html+='<div class="card'+(soon?" soon":"")+'">'+
+      (s.poster?'<img class="poster" loading="lazy" src="'+esc(s.poster)+'" alt="">'
+               :'<div class="poster"></div>')+
+      '<div class="meta">'+
+        '<p class="title">'+esc(s.title)+(s.age?'<span class="pill">'+esc(s.age)+"</span>":"")+"</p>"+
+        '<p class="where">'+esc(s.cinema)+" · "+esc(s.room)+(s.version?" · "+esc(s.version):"")+"</p>"+
+        '<div class="startline"><span class="big">'+hhmm(start)+
+          '</span><span class="biglabel">filmen starter</span></div>'+
+        '<p class="detail">Annonsert <b class="strike">'+hhmm(s.startMin)+"</b> · "+ads+" min reklame"+
+          (calibrated(s.cinemaId)?'<span class="pill cal">kalibrert</span>'
+                                 :'<span class="pill est">anslag</span>')+
+          (end?" · slutt <b>"+hhmm(end)+"</b>":"")+
+          (s.minutes?" · "+fmtLen(s.minutes):" · spilletid ukjent")+"</p>"+
+      "</div></div>";
+  });
+  $("#list").innerHTML=html;
+}
+
+/* ---- kalibrering ---- */
+function fillCal(){
+  $("#calCinema").innerHTML=state.cinemas.map(function(c){
+    return '<option value="'+esc(c.id)+'">'+esc(c.name)+"</option>";}).join("");
+  var list=state.films.filter(function(f){return f.minutes;})
+    .sort(function(a,b){return a.title.localeCompare(b.title,"no");});
+  $("#calFilm").innerHTML=list.map(function(f){
+    return '<option value="'+f.minutes+'">'+esc(f.title)+" ("+fmtLen(f.minutes)+")</option>";}).join("");
+  $("#defads").value=state.defaultAds;
+  $("#defadsr").value=Math.min(state.defaultAds,40);
+  renderOverrides();
+}
+
+function renderOverrides(){
+  var box=$("#overrides"),keys=Object.keys(state.adsByCinema);
+  if(!keys.length){box.innerHTML="";return;}
+  var html='<p style="margin-top:16px"><b style="color:var(--text)">Kalibrerte kinoer</b></p>';
+  keys.forEach(function(id){
+    var name="Kino "+id;
+    state.cinemas.forEach(function(c){if(c.id===id)name=c.name;});
+    html+='<div class="kv"><label>'+esc(name)+"</label><span>"+state.adsByCinema[id]+
+      ' min</span><span class="reset" data-reset="'+esc(id)+'">nullstill</span></div>';
+  });
+  box.innerHTML=html;
+  $$("[data-reset]",box).forEach(function(el){el.onclick=function(){
+    delete state.adsByCinema[el.getAttribute("data-reset")];
+    renderOverrides(); render(); saveSettings();};});
+}
+
+function toMin(v){var m=(v||"").match(/^(\d{1,2}):(\d{2})$/);return m?+m[1]*60+ +m[2]:null;}
+
+$("#calGo").onclick=function(){
+  var start=toMin($("#calStart").value),end=toMin($("#calEnd").value);
+  var runtime=parseInt($("#calFilm").value,10),id=$("#calCinema").value,out=$("#calOut");
+  if(start===null||end===null||!runtime){
+    out.style.color="var(--warn)";out.textContent="Fyll inn film, starttid og slutt-tid.";return;}
+  var slot=end-start; if(slot<0)slot+=1440;
+  var ads=slot-runtime;
+  if(ads<0||ads>60){out.style.color="var(--warn)";
+    out.textContent="Det gir "+ads+" min reklame — sjekk at du valgte riktig film.";return;}
+  state.adsByCinema[id]=ads;
+  out.style.color="var(--go)";
+  out.textContent="✓ "+ads+" min reklame. Filmen starter "+hhmm(start+ads)+".";
+  renderOverrides(); render(); saveSettings();
+};
+
+function setDefault(v){
+  v=Math.max(0,Math.min(45,parseInt(v,10)||0));
+  state.defaultAds=v; $("#defads").value=v; $("#defadsr").value=Math.min(v,40);
+  render(); saveSettings();
+}
+$("#defads").oninput=function(){setDefault(this.value);};
+$("#defadsr").oninput=function(){setDefault(this.value);};
+$("#q").oninput=function(){state.query=this.value;render();};
+$("#refresh").onclick=function(){load();};
+
+loadSettings();
+$("#defads").value=state.defaultAds;
+$("#defadsr").value=Math.min(state.defaultAds,40);
+load();
+setInterval(function(){if(state.loaded)render();},60000);
+})();
+</script>
+</body>
+</html>
