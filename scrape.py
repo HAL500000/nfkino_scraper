@@ -112,6 +112,10 @@ def parse_film(html, slug):
                   r'<div class="field__item">(.*?)</div>', html, re.S)
     if m:
         minutes = parse_duration(clean(m.group(2)))
+    # nfkino har av og til feil i lengdefeltet (f.eks. "1 min" paa en spillefilm).
+    # Da er det ærligere aa si "spilletid ukjent" enn aa regne ut feil sluttid.
+    if minutes is not None and minutes < 20:
+        minutes = None
 
     age = ""
     m = re.search(r'field--name-field-censur(.{0,600}?)vocabulary-movie-censur'
