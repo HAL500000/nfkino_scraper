@@ -31,6 +31,7 @@
   .chip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--dim);
     padding:7px 13px;border-radius:999px;font-size:13.5px;cursor:pointer;white-space:nowrap;font-weight:500}
   .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .chip.pick.on::before{content:"✓ ";font-weight:700}
   .chip.day{display:flex;flex-direction:column;align-items:center;line-height:1.15;padding:6px 14px}
   .chip.day b{font-size:14px;font-weight:700}
   .chip.day span{font-size:11px;opacity:.75}
@@ -212,7 +213,7 @@ function isoToday(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()
 function isoToDate(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
 function nowMin(){var d=new Date();return d.getHours()*60+d.getMinutes();}
 
-var state={films:[],screenings:[],cinemas:[],rows:[],day:null,cinemaFilter:null,query:"",
+var state={films:[],screenings:[],cinemas:[],rows:[],day:null,picked:[],query:"",
            defaultAds:18,adsByCinema:{},loaded:false,generated:0};
 
 /* ---- lagring: localStorage om mulig, ellers bare i minnet ---- */
@@ -227,19 +228,24 @@ function loadSettings(){
     var s=JSON.parse(raw);
     if(typeof s.defaultAds==="number")state.defaultAds=s.defaultAds;
     if(s.adsByCinema&&typeof s.adsByCinema==="object")state.adsByCinema=s.adsByCinema;
+    if(Object.prototype.toString.call(s.picked)==="[object Array]")
+      state.picked=s.picked.map(String);
   }catch(e){}}
   // adressen vinner over lagret verdi, så delte lenker virker
   var h=(location.hash||"").replace(/^#/,"");
   if(h)h.split(",").forEach(function(p){
     var a=p.match(/^ads=(\d+)$/); if(a){state.defaultAds=+a[1];return;}
-    var b=p.match(/^(\d+):(\d+)$/); if(b){state.adsByCinema[b[1]]=+b[2];}
+    var b=p.match(/^(\d+):(\d+)$/); if(b){state.adsByCinema[b[1]]=+b[2];return;}
+    var c=p.match(/^k=([\d.]*)$/);
+    if(c){state.picked=c[1]?c[1].split("."):[];}
   });
 }
 function saveSettings(){
   store.set("nfkino.settings",JSON.stringify(
-    {defaultAds:state.defaultAds,adsByCinema:state.adsByCinema}));
+    {defaultAds:state.defaultAds,adsByCinema:state.adsByCinema,picked:state.picked}));
   var parts=["ads="+state.defaultAds];
   Object.keys(state.adsByCinema).forEach(function(id){parts.push(id+":"+state.adsByCinema[id]);});
+  if(state.picked.length)parts.push("k="+state.picked.join("."));
   try{history.replaceState(null,"","#"+parts.join(","));}catch(e){}
 }
 
@@ -299,15 +305,24 @@ function renderDays(dayList){
     c.classList.add("on"); render();};});
 }
 
+function isPicked(id){return state.picked.indexOf(id)>=0;}
+
 function renderCinemas(){
   var el=$("#cinemas");
-  el.innerHTML='<div class="chip'+(state.cinemaFilter===null?" on":"")+'" data-c="">Alle kinoer</div>'+
-    state.cinemas.map(function(c){return '<div class="chip'+(state.cinemaFilter===c.id?" on":"")+
-      '" data-c="'+esc(c.id)+'">'+esc(c.name)+"</div>";}).join("");
+  el.innerHTML='<div class="chip'+(state.picked.length?"":" on")+'" data-c="">Alle kinoer</div>'+
+    state.cinemas.map(function(c){
+      return '<div class="chip pick'+(isPicked(c.id)?" on":"")+'" data-c="'+esc(c.id)+'">'+
+             esc(c.name)+"</div>";}).join("");
   $$(".chip",el).forEach(function(c){c.onclick=function(){
-    var v=c.getAttribute("data-c"); state.cinemaFilter=v===""?null:v;
-    $$(".chip",el).forEach(function(x){x.classList.remove("on");});
-    c.classList.add("on"); render();};});
+    var v=c.getAttribute("data-c");
+    if(v===""){
+      state.picked=[];
+    }else{
+      var i=state.picked.indexOf(v);
+      if(i>=0)state.picked.splice(i,1); else state.picked.push(v);
+    }
+    renderCinemas(); render(); saveSettings();
+  };});
 }
 
 function bucket(m){
@@ -322,7 +337,7 @@ function render(){
   var today=isoToday(),now=nowMin(),q=state.query.toLowerCase().trim();
   var rows=state.screenings.filter(function(s){
     if(s.date!==state.day)return false;
-    if(state.cinemaFilter&&s.cinemaId!==state.cinemaFilter)return false;
+    if(state.picked.length&&!isPicked(s.cinemaId))return false;
     if(q&&s.title.toLowerCase().indexOf(q)<0)return false;
     if(s.date===today&&s.startMin+adsFor(s.cinemaId)+10<now)return false;
     return true;
@@ -331,8 +346,13 @@ function render(){
   state.rows=rows;
 
   if(!rows.length){
+    var valgt=state.cinemas.filter(function(c){return isPicked(c.id);})
+      .map(function(c){return c.name;}).join(", ");
     $("#list").innerHTML='<div class="status">Ingen visninger her.<br>'+
-      (q?"Prøv et annet søk.":"Velg en annen dag eller kino.")+"</div>";
+      (q?"Prøv et annet søk."
+        :(valgt?"Ingenting på "+esc(valgt)+" denne dagen — prøv en annen dag, "+
+                "eller trykk «Alle kinoer»."
+               :"Velg en annen dag."))+"</div>";
     return;
   }
 
