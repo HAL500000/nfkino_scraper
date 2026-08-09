@@ -89,6 +89,13 @@
   .hint{font-size:12.5px;color:var(--dim2);margin:11px 0 0;line-height:1.5}
   .outmsg{margin:13px 0 0;font-size:14px;font-weight:600;line-height:1.45}
   .linkrow{display:flex;gap:16px;align-items:center;margin-top:18px;font-size:13.5px;flex-wrap:wrap}
+  .extlinks{display:flex;gap:8px;margin:0 0 4px;flex-wrap:wrap}
+  .extlink{flex:1 1 0;min-width:98px;text-align:center;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;padding:11px 8px;
+    font-size:13px;font-weight:700;color:var(--text);text-decoration:none}
+  .extlink:active{background:var(--card2)}
+  .sectlbl{font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--dim2);
+    font-weight:700;margin:20px 0 9px}
   .linkrow .reset{color:var(--dim2);cursor:pointer;text-decoration:underline}
   details.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     margin:12px 0;overflow:hidden}
@@ -186,6 +193,11 @@
 
   <div class="times" id="sTimes"></div>
 
+  <p class="sectlbl">Omtaler og terningkast</p>
+  <div class="extlinks" id="sRatings"></div>
+  <p class="hint" id="sRatingsHint"></p>
+
+  <p class="sectlbl">Juster reklametida</p>
   <label class="lbl" for="sEnd">Hva står det at visningen slutter?</label>
   <div class="row">
     <input type="time" id="sEnd" step="60">
@@ -389,8 +401,20 @@ function openSheet(s){
   var ads=adsFor(s.cinemaId),start=s.startMin+ads,end=s.minutes?start+s.minutes:null;
 
   $("#sTitle").textContent=s.title;
-  $("#sWhere").textContent=s.cinema+" · "+s.room+(s.version?" · "+s.version:"")+
-    (s.age?" · "+s.age:"");
+  $("#sWhere").innerHTML=esc(s.cinema+" · "+s.room+(s.version?" · "+s.version:"")+
+    (s.age?" · "+s.age:""))+
+    ((s.directors&&s.directors.length)?"<br>Regi: "+esc(s.directors.join(", ")):"");
+
+  var q=s.original||s.title, eq=encodeURIComponent(q);
+  $("#sRatings").innerHTML=
+    '<a class="extlink" target="_blank" rel="noopener" href="https://www.imdb.com/find/?q='+
+      eq+'&amp;s=tt&amp;ttype=ft">IMDb</a>'+
+    '<a class="extlink" target="_blank" rel="noopener" href="https://www.rottentomatoes.com/search?search='+
+      eq+'">Rotten<br>Tomatoes</a>'+
+    '<a class="extlink" target="_blank" rel="noopener" href="https://www.metacritic.com/search/'+
+      eq+'/?category=2">Metacritic</a>';
+  $("#sRatingsHint").textContent="Søker på "+(s.original&&s.original!==s.title
+    ? "originaltittelen «"+s.original+"»." : "«"+q+"».");
 
   $("#sTimes").innerHTML=
     '<div class="trow"><span>Annonsert start</span><b>'+hhmm(s.startMin)+"</b></div>"+

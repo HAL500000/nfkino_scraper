@@ -100,6 +100,25 @@ RE_TIME = re.compile(r'<div class="time">\s*<div>\s*(\d{1,2})[.:](\d{2})', re.S)
 RE_VERSION = re.compile(r'<div class="version">(.*?)</div>', re.S)
 
 
+RE_FIELD_ITEM = re.compile(r'<div class="field__item[^"]*">(.*?)</div>', re.S)
+
+
+def field_block(html, name, span=900):
+    """Utsnittet av HTML som hoerer til ett Drupal-felt, avgrenset av neste felt."""
+    i = html.find("field--name-field-" + name)
+    if i < 0:
+        return ""
+    chunk = html[i:i + span]
+    j = chunk.find("field--name-field-", 20)
+    return chunk[:j] if j > 0 else chunk
+
+
+def field_items(html, name):
+    """Alle verdiene i et felt, i rekkefoelge. Tom liste hvis feltet mangler."""
+    vals = [clean(x) for x in RE_FIELD_ITEM.findall(field_block(html, name))]
+    return [v for v in vals if v]
+
+
 def parse_film(html, slug):
     m = re.search(r'<h1[^>]*class="[^"]*node-title[^"]*"[^>]*>(.*?)</h1>', html, re.S)
     title = clean(m.group(1)) if m else ""
@@ -122,6 +141,11 @@ def parse_film(html, slug):
                   r'(.{0,300}?)field__item">(.*?)</div>', html, re.S)
     if m:
         age = clean(m.group(3))
+
+    # Originaltittel brukes til soek paa IMDb/RT/Metacritic - norske titler
+    # som "Den fremmede" gir ubrukelige treff der.
+    original = (field_items(html, "original-title") or [""])[0]
+    directors = field_items(html, "directors")[:3]
 
     poster = None
     m = re.search(r'<img[^>]+src="([^"]*movie-poster[^"]*)"', html, re.I)
@@ -151,6 +175,7 @@ def parse_film(html, slug):
                 screenings.append({
                     "slug": slug, "title": title, "minutes": minutes,
                     "age": age, "poster": poster,
+                    "original": original, "directors": directors,
                     "cinemaId": nid.group(1), "cinema": clean(cname.group(1)),
                     "date": d.group(1),
                     "startMin": int(t.group(1)) * 60 + int(t.group(2)),
@@ -158,8 +183,9 @@ def parse_film(html, slug):
                     "version": version, "url": a.group(1),
                 })
 
-    return {"slug": slug, "title": title, "minutes": minutes,
-            "age": age, "poster": poster, "screenings": screenings}
+    return {"slug": slug, "title": title, "minutes": minutes, "age": age,
+            "poster": poster, "original": original, "directors": directors,
+            "screenings": screenings}
 
 
 # --------------------------------------------------------------------- build
@@ -215,7 +241,8 @@ def build(log=print):
         "city": CITY,
         "linksFound": links_found,
         "truncated": links_found > MAX_FILMS,
-        "films": [{k: f[k] for k in ("slug", "title", "minutes", "age", "poster")}
+        "films": [{k: f[k] for k in ("slug", "title", "minutes", "age",
+                                     "poster", "original", "directors")}
                   for f in films],
         "cinemas": cinemas,
         "screenings": screenings,
