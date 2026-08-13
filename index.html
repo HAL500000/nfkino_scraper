@@ -96,10 +96,6 @@
   .extlink:active{background:var(--card2)}
   .sectlbl{font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--dim2);
     font-weight:700;margin:20px 0 9px}
-  details.alt{margin-top:14px}
-  details.alt>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--blue2)}
-  details.alt>summary::-webkit-details-marker{display:none}
-  details.alt>div{padding-top:12px}
   .linkrow .reset{color:var(--dim2);cursor:pointer;text-decoration:underline}
   details.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     margin:12px 0;overflow:hidden}
@@ -160,9 +156,9 @@
       <input class="slider" type="range" id="defadsr" min="0" max="40" step="1">
 
       <p style="margin-top:16px"><b style="color:var(--text)">Kalibrer mot en billett</b><br>
-      Trykk på en visning i lista og skriv inn når filmen faktisk begynte. Den annonserte
-      starttiden kjenner vi, så reklametida regnes ut av seg selv og lagres for den kinoen.
-      Ikke bruk «Slutter»-tiden fra billetten — se forklaringen under.</p>
+      Trykk på en visning i lista og skriv inn «Slutter»-tiden fra billetten. Vi kjenner
+      allerede den annonserte starttiden og spilletiden, så reklametida regnes ut av seg selv
+      og lagres for den kinoen.</p>
       <div id="overrides"></div>
     </div>
   </details>
@@ -178,15 +174,11 @@
       <p style="background:var(--bg2);padding:10px 12px;border-radius:8px;color:var(--text)">
         filmstart = annonsert tid + reklame<br>slutt = filmstart + spilletid
       </p>
-      <p><b style="color:var(--text)">Hvorfor ikke bare bruke «Slutter»-tida på billetten?</b>
-      Fordi den er kinoens planlagte slutt på visningen, med klargjøringstid lagt inn — ikke
-      når filmen er ferdig. To ekte billetter viser hvor sprikende det er: <i>Her Private Hell</i>
-      på Klingenberg ga 18 minutter, mens <i>Spider-Man: Brand New Day</i> på Saga ga 30. Begge
-      gangene var den faktiske reklamen rundt et kvarter.</p>
-      <p>Derfor spør vi heller om når filmen faktisk begynte. Det er én måling, uten
-      mellomregning, og den treffer.</p>
-      <p>Merk også at spilletida fra nfkino inkluderer rulleteksten. «Slutt» er når lyset går
-      på — historien er som regel ferdig noen minutter før.</p>
+      <p>Kontroll mot en ekte billett: <i>Her Private Hell</i> på Klingenberg, annonsert 20:45,
+      «Slutter 22:52» = 127 min. Spilletiden er 1t 49m = 109 min. Differansen er
+      <b style="color:var(--text)">18 minutter reklame</b> — filmen begynner altså 21:03.</p>
+      <p>Stemmer ikke «slutt»-tiden vår med billetten din? Da er anslaget for den kinoen litt feil.
+      Kalibrer den, så treffer resten også.</p>
     </div>
   </details>
 
@@ -206,26 +198,13 @@
   <p class="hint" id="sRatingsHint"></p>
 
   <p class="sectlbl">Juster reklametida</p>
-  <label class="lbl" for="sStarted">Når begynte selve filmen?</label>
+  <label class="lbl" for="sEnd">Hva står det at visningen slutter?</label>
   <div class="row">
-    <input type="time" id="sStarted" step="60">
+    <input type="time" id="sEnd" step="60">
     <button class="primary" id="sSave">Lagre</button>
   </div>
   <p class="hint" id="sHint"></p>
   <p class="outmsg" id="sOut"></p>
-
-  <details class="alt">
-    <summary>Husker du bare når den var ferdig?</summary>
-    <div>
-      <label class="lbl" for="sEnd">Når var rulleteksten ferdig?</label>
-      <div class="row">
-        <input type="time" id="sEnd" step="60">
-        <button class="ghost" id="sSaveEnd">Regn ut</button>
-      </div>
-      <p class="hint">Regnes ut fra spilletida nfkino oppgir. Ikke bruk «Slutter»-tida
-      fra billetten — den har klargjøringstid lagt inn og bommer med opptil et kvarter.</p>
-    </div>
-  </details>
 
   <div class="linkrow" id="sLinks"></div>
 </div>
@@ -443,17 +422,19 @@ function openSheet(s){
     '<div class="trow"><span>Reklame'+(calibrated(s.cinemaId)?" (kalibrert)":" (anslag)")+
       "</span><b>"+ads+" min</b></div>"+
     (s.minutes?'<div class="trow"><span>Spilletid</span><b>'+fmtLen(s.minutes)+"</b></div>"+
-      '<div class="trow"><span>Slutt inkl. rulletekst</span><b>'+hhmm(end)+"</b></div>"
+      '<div class="trow"><span>Slutter</span><b>'+hhmm(end)+"</b></div>"
      :'<div class="trow"><span>Spilletid</span><b>ukjent</b></div>');
 
   $("#sOut").textContent="";
-  $("#sStarted").value=hhmm(start);
   $("#sEnd").value=end!==null?hhmm(end):"";
   $("#sEnd").disabled=!s.minutes;
-  $("#sSaveEnd").disabled=!s.minutes;
-  $("#sHint").textContent="Sitter du i salen? Noter klokkeslettet når reklamen er over og "+
-    "filmen faktisk ruller. Vi trekker fra annonsert start ("+hhmm(s.startMin)+
-    ") og bruker det for alle visninger på "+s.cinema+".";
+  $("#sSave").disabled=!s.minutes;
+  $("#sHint").textContent=s.minutes
+    ? "Vi kjenner starttida ("+hhmm(s.startMin)+") og spilletida ("+fmtLen(s.minutes)+
+      "). Retter du slutt-tida til det billetten sier, regner vi ut reklametida for "+
+      s.cinema+" — og alle visningene der blir riktige."
+    : "nfkino oppgir ikke spilletid for denne filmen, så vi kan ikke regne ut reklametida her. "+
+      "Prøv en annen visning på samme kino.";
 
   var links='<a href="'+esc(s.url)+'" target="_blank" rel="noopener">Kjøp billett på nfkino.no ↗</a>';
   if(calibrated(s.cinemaId))
@@ -476,12 +457,15 @@ function closeSheet(){
   sheetS=null;
 }
 
-function applyAds(s,ads,how){
-  var out=$("#sOut");
-  if(ads===null){out.style.color="var(--warn)";out.textContent="Skriv inn et klokkeslett.";return;}
-  if(ads<0||ads>45){
+$("#sSave").onclick=function(){
+  var s=sheetS; if(!s||!s.minutes)return;
+  var end=toMin($("#sEnd").value),out=$("#sOut");
+  if(end===null){out.style.color="var(--warn)";out.textContent="Skriv inn slutt-tida.";return;}
+  var slot=end-s.startMin; if(slot<0)slot+=1440;
+  var ads=slot-s.minutes;
+  if(ads<0||ads>60){
     out.style.color="var(--warn)";
-    out.textContent="Det gir "+ads+" min reklame, som virker feil. Sjekk klokkeslettet.";
+    out.textContent="Det gir "+ads+" min reklame, som virker feil. Sjekk at slutt-tida stemmer.";
     return;
   }
   state.adsByCinema[s.cinemaId]=ads;
@@ -490,25 +474,7 @@ function applyAds(s,ads,how){
   out=$("#sOut");
   out.style.color="var(--go)";
   out.textContent="✓ "+ads+" min reklame lagret for "+s.cinema+
-    " ("+how+"). Filmen starter "+hhmm(s.startMin+ads)+".";
-}
-
-/* Malt direkte: naar begynte filmen? Trenger ikke spilletid i det hele tatt. */
-$("#sSave").onclick=function(){
-  var s=sheetS; if(!s)return;
-  var t=toMin($("#sStarted").value);
-  if(t===null)return applyAds(s,null);
-  var ads=t-s.startMin; if(ads<-720)ads+=1440;
-  applyAds(s,ads,"målt start");
-};
-
-/* Reservevei: naar var rulleteksten ferdig? Da maa vi stole paa spilletida. */
-$("#sSaveEnd").onclick=function(){
-  var s=sheetS; if(!s||!s.minutes)return;
-  var t=toMin($("#sEnd").value);
-  if(t===null)return applyAds(s,null);
-  var slot=t-s.startMin; if(slot<0)slot+=1440;
-  applyAds(s,slot-s.minutes,"regnet fra slutt");
+    ". Filmen starter "+hhmm(s.startMin+ads)+".";
 };
 
 $("#list").addEventListener("click",function(e){
